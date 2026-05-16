@@ -1,0 +1,35 @@
+<div class="auth-container animate-fade-in">
+  <a routerLink="/" class="back-btn">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    <span>Back to Home</span>
+  </a>
+  <div class="auth-card glass glow-purple">
+    <div class="auth-header">
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#9333ea" stroke-width="2"/><path d="M2 17L12 22L22 17" stroke="#9333ea" stroke-width="2"/><path d="M2 12L12 17L22 12" stroke="#9333ea" stroke-width="2"/></svg>
+        <span>SpendSmart</span>
+      </div>
+      <h2>Verify Email</h2>
+      <p>We've sent a code to <strong>{{ email }}</strong></p>
+    </div>
+
+    <form (submit)="onSubmit()" class="auth-form">
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+
+      <div class="form-group">
+        <label>OTP Code</label>
+        <input type="text" [(ngModel)]="otp" name="otp" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 0.5em; font-size: 1.5rem;" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
+        {{ loading() ? 'Verifying...' : 'Verify & Register' }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Didn't receive the code? <a routerLink="/register">Try again</a>
+    </p>
+  </div>
+</div>

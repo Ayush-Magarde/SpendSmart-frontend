@@ -1,0 +1,90 @@
+<div class="dashboard-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="dashboard-main content-area animate-fade-in">
+    <div class="header-section">
+      <div class="header-content">
+        <h1>📜 Transaction History</h1>
+        <p>A combined view of all your income and expenses</p>
+      </div>
+      <button (click)="refreshData()" class="btn btn-outline" [disabled]="loading()">
+        {{ loading() ? 'Refreshing...' : 'Refresh' }}
+      </button>
+    </div>
+
+    <!-- Filters & Sorting Bar -->
+    <div class="filters-bar glass">
+      <div class="filter-group">
+        <label for="typeFilter">Type</label>
+        <select id="typeFilter" [ngModel]="selectedType()" (ngModelChange)="onTypeChange($event)" class="filter-select">
+          <option value="ALL">All Transactions</option>
+          <option value="income">Income Only</option>
+          <option value="expense">Expense Only</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="categoryFilter">Category</label>
+        <select id="categoryFilter" [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)" class="filter-select">
+          <option value="ALL">All Categories</option>
+          @for (cat of filteredCategories(); track cat.id) {
+            <option [value]="cat.name">{{ cat.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="sort-group">
+        <button class="btn-sort" (click)="toggleSort()">
+          {{ sortOrder() === 'DESC' ? '⬇ Newest First' : '⬆ Oldest First' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="transactions-container card glass">
+      <div class="transactions-list">
+        @if (transactions().length === 0) {
+          <div class="empty-state">
+            <p>No transactions found. Start by adding some income or expenses!</p>
+          </div>
+        } @else {
+          <div class="table-header">
+            <span>Type</span>
+            <span>Transaction Details</span>
+            <span class="text-right">Amount</span>
+            <span class="text-right">Action</span>
+          </div>
+          
+          @for (item of transactions(); track txKey(item)) {
+            <div class="transaction-row animate-slide-up" [class.deleting]="deletingId() === txKey(item)">
+              <div class="type-indicator" [class.type-income]="item.type === 'income'">
+                {{ item.type === 'income' ? '▲ Income' : '▼ Expense' }}
+              </div>
+              <div class="description-cell">
+                <div class="desc-header">
+                  <span class="desc-text">{{ item.description }}</span>
+                  <span class="inline-category-badge">{{ item.category }}</span>
+                  <span class="recurring-badge" *ngIf="item.description.includes('Auto-generated')">
+                    🔁 Recurring
+                  </span>
+                </div>
+                @if (item.createdAt) {
+                  <div class="tx-timestamp">{{ item.createdAt | date:'MMM d, y, h:mm a' }}</div>
+                } @else if (item.date) {
+                  <div class="tx-timestamp">{{ item.date | date:'MMM d, y' }}</div>
+                }
+              </div>
+              <div class="amount-cell" [class.text-green]="item.type === 'income'" [class.text-red]="item.type === 'expense'">
+                {{ item.type === 'income' ? '+' : '-' }}₹{{ item.amount }}
+              </div>
+              <div class="action-cell">
+                <button class="btn-delete-tx" (click)="deleteTransaction(item)" [disabled]="deletingId() === txKey(item)" title="Delete">
+                  @if (deletingId() === txKey(item)) { ⏳ } @else { 🗑 }
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </main>
+</div>

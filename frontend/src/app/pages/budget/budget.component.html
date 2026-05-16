@@ -1,0 +1,121 @@
+<div class="dashboard-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="dashboard-main content-area animate-fade-in">
+    <div class="page-header">
+      <div class="header-content">
+        <h1>🎯 Budget Management</h1>
+        <p>Plan your spending and stay on track</p>
+      </div>
+      @if (!showForm()) {
+        <button class="btn-add-budget animate-fade-in" (click)="toggleForm()">
+          + Set Monthly Budget
+        </button>
+      }
+    </div>
+
+    @if (error()) {
+      <div class="alert alert-error mb-4 animate-slide-up">{{ error() }}</div>
+    }
+
+    <!-- Add/Edit Budget Form -->
+    @if (showForm()) {
+      <section class="form-section animate-slide-up">
+        <div class="card glass budget-form-card">
+          <div class="card-header-flex">
+            <h3>{{ editingBudgetId ? 'Edit Budget' : 'Set Monthly Budget' }}</h3>
+            <button class="btn-cancel" (click)="toggleForm()">✕ Cancel</button>
+          </div>
+          
+          <div class="budget-form-grid">
+            <div class="form-group">
+              <label>Category</label>
+              <div class="category-select-wrapper">
+                <select [(ngModel)]="selectedCategoryId" name="category" [disabled]="editingBudgetId !== null">
+                  <option value="" disabled>Select Category</option>
+                  @for (cat of categories(); track cat.id) {
+                    @if (cat.type === 'EXPENSE') {
+                      <option [value]="cat.id">{{ cat.name }}</option>
+                    }
+                  }
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Monthly Limit</label>
+              <div class="input-wrapper">
+                <span class="currency">₹</span>
+                <input type="number" [(ngModel)]="budgetAmount" name="amount" placeholder="0.00">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn-submit btn-save" (click)="saveBudget()" [disabled]="isSaving()">
+                {{ isSaving() ? 'Saving...' : (editingBudgetId ? 'Update Budget' : 'Save Budget') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    @if (loading()) {
+      <div class="loader-container">
+        <div class="loader"></div>
+      </div>
+    } @else {
+      @if (budgetItems().length === 0) {
+        <div class="empty-state animate-fade-in">
+          <div class="empty-icon">💸</div>
+          <h3>No expense categories found</h3>
+          <p>Add some categories first to start budgeting.</p>
+        </div>
+      } @else {
+        <div class="budget-grid">
+          @for (item of budgetItems(); track item.category.id) {
+            <div class="card glass budget-card animate-slide-up" [class.border-red]="item.status === 'OVER'">
+              <div class="card-header">
+                <span class="cat-name">{{ item.category.name }}</span>
+                <div class="card-actions">
+                  @if (item.budgetId && !item.category.isDefault) {
+                    <button class="btn-action delete" (click)="deleteBudget(item)">🗑️</button>
+                  }
+                  <button class="btn-action edit" (click)="openEdit(item)">✎</button>
+                </div>
+              </div>
+
+              <div class="budget-stats">
+                <div class="stat-item">
+                  <label>Spent</label>
+                  <span class="value" [class.text-red]="item.status === 'OVER'">₹{{ item.spent }}</span>
+                </div>
+                <div class="stat-item">
+                  <label>Budget</label>
+                  <span class="value">₹{{ item.limit || 0 }}</span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-info">
+                  <span>{{ item.percentage | number:'1.0-0' }}% used</span>
+                  <span [class.text-red]="item.remaining < 0">
+                    {{ item.remaining < 0 ? 'Exceeded by ₹' + (-item.remaining) : '₹' + item.remaining + ' left' }}
+                  </span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" 
+                    [style.width.%]="item.percentage > 100 ? 100 : item.percentage"
+                    [class.bg-green]="item.status === 'SAFE'"
+                    [class.bg-yellow]="item.status === 'WARNING'"
+                    [class.bg-red]="item.status === 'OVER'">
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </main>
+</div>

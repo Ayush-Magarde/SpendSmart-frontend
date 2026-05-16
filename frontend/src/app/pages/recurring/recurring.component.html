@@ -1,0 +1,67 @@
+<div class="dashboard-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="dashboard-main content-area animate-fade-in">
+    <div class="header-section">
+      <h1>🔁 Recurring Transactions</h1>
+      <p>Manage your automated income and expenses</p>
+    </div>
+
+    <div class="rules-container card glass">
+      <div class="rules-header">
+        <h3>Active Recurring Rules</h3>
+        @if (loading()) {
+          <span class="loading-tag animate-pulse">Refreshing...</span>
+        }
+      </div>
+
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+
+      <div class="rules-list">
+        @if (rules().length === 0 && !loading()) {
+          <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <p>No recurring rules found.</p>
+            <p class="subtext">Enable "Make this recurring" when adding an income or expense.</p>
+          </div>
+        }
+
+        @for (rule of rules(); track rule.id) {
+          <div class="rule-item animate-slide-up" [class.deleting]="deletingId() === rule.id">
+            <div class="rule-icon-box" [class.income]="rule.type === 'INCOME'" [class.expense]="rule.type === 'EXPENSE'">
+              <span class="icon">{{ rule.type === 'INCOME' ? '💰' : '💸' }}</span>
+            </div>
+            
+            <div class="rule-details">
+              <div class="rule-main">
+                <span class="rule-name">{{ rule.name }}</span>
+                <span class="rule-badge" [class.income]="rule.type === 'INCOME'" [class.expense]="rule.type === 'EXPENSE'">
+                  {{ rule.type }}
+                </span>
+              </div>
+              <div class="rule-meta">
+                <span class="frequency">🔁 Every {{ rule.frequency | lowercase }}</span>
+                <span class="status-active">● Active</span>
+              </div>
+            </div>
+
+            <div class="rule-right">
+              <div class="rule-amount" [class.text-green]="rule.type === 'INCOME'" [class.text-red]="rule.type === 'EXPENSE'">
+                {{ rule.type === 'INCOME' ? '+' : '-' }}₹{{ rule.amount | number }}
+              </div>
+              <button 
+                class="btn-delete-rule" 
+                (click)="deleteRule(rule)"
+                [disabled]="deletingId() === rule.id"
+                title="Delete Rule">
+                @if (deletingId() === rule.id) { ⏳ } @else { 🗑 }
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </main>
+</div>

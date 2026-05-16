@@ -1,0 +1,146 @@
+<div class="dashboard-layout">
+  <app-sidebar></app-sidebar>
+
+  <main class="dashboard-main content-area animate-fade-in">
+    <div class="header-section">
+      <h1>💸 Expense Management</h1>
+      <p>Track and manage your spending</p>
+    </div>
+
+    <div class="expense-grid">
+      <!-- Left: Add Expense Form -->
+      <section class="form-section">
+        <div class="card glass border-red">
+          <h3>Add New Expense</h3>
+          <form (submit)="onSubmit()" class="expense-form">
+            @if (error()) {
+              <div class="alert alert-error">{{ error() }}</div>
+            }
+
+            <div class="form-group">
+              <label>Amount</label>
+              <div class="input-wrapper">
+                <span class="currency">₹</span>
+                <input type="number" [(ngModel)]="amount" name="amount" placeholder="0.00" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Category</label>
+              <div class="category-select-wrapper">
+                <select [(ngModel)]="category" name="category" required>
+                  <option value="" disabled selected>Select category</option>
+                  @for (cat of expenseCategories(); track cat.id) {
+                    <option [value]="cat.name">
+                      {{ cat.name }} {{ cat.isDefault ? '(Default)' : '' }}
+                    </option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Description</label>
+              <textarea [(ngModel)]="description" name="description" placeholder="What was this for?" rows="3" required></textarea>
+            </div>
+
+            <div class="form-group-checkbox">
+              <label class="checkbox-container">
+                <input type="checkbox" [(ngModel)]="isRecurring" name="isRecurring">
+                <span class="checkmark"></span>
+                Make this recurring
+              </label>
+            </div>
+
+            <div class="recurring-fields animate-fade-in" *ngIf="isRecurring">
+              <div class="form-group">
+                <label>Rule Name</label>
+                <input type="text" [(ngModel)]="ruleName" name="ruleName" placeholder="e.g. Netflix Subscription" [required]="isRecurring">
+              </div>
+              <div class="form-group mt-2">
+                <label>Frequency</label>
+                <select [(ngModel)]="frequency" name="frequency" [required]="isRecurring">
+                  <option value="DAILY">Daily</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="MONTHLY">Monthly</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-submit btn-expense" [disabled]="loading()">
+              {{ loading() ? 'Saving...' : '+ Add Expense' }}
+            </button>
+          </form>
+        </div>
+
+        <!-- Category Management Card -->
+        <div class="card glass mt-4 animate-slide-up">
+          <div class="card-header-flex">
+            <h3>📂 Manage Categories</h3>
+            <span class="badge-count">{{ expenseCategories().length }}</span>
+          </div>
+          
+          <div class="category-manager">
+            <div class="category-list-scroll">
+              @for (cat of expenseCategories(); track cat.id) {
+                <div class="category-chip" [class.is-default]="cat.isDefault">
+                  <span class="chip-name">{{ cat.name }}</span>
+                  @if (!cat.isDefault) {
+                    <button type="button" class="btn-chip-delete" (click)="deleteSelectedCategory(cat)" title="Delete Category">✕</button>
+                  } @else {
+                    <span class="chip-lock">🔒</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="add-category-box">
+              <input type="text" [(ngModel)]="newCategoryName" name="newCategory" placeholder="New Category Name..." class="inline-input">
+              <button type="button" class="btn-add-cat" (click)="saveCategory()" [disabled]="addingCategory() || !newCategoryName">
+                {{ addingCategory() ? '...' : '+' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Recent Expenses List -->
+      <section class="list-section">
+        <div class="card glass">
+          <h3>Recent Expenses</h3>
+          <div class="expense-list">
+            @if (expenses().length === 0) {
+              <div class="empty-state">
+                <p>No expenses recorded yet.</p>
+              </div>
+            } @else {
+              @for (item of recentExpenses(); track item.id) {
+                <div class="expense-item animate-slide-up" [class.deleting]="deletingId() === item.id">
+                  <div class="item-info">
+                    <span class="item-category">{{ item.category }}</span>
+                    <p class="item-desc">{{ item.description }}</p>
+                  </div>
+                  <div class="item-right">
+                    <div class="item-amount text-red">-₹{{ item.amount }}</div>
+                    <button
+                      class="btn-delete-item"
+                      (click)="deleteExpense(item)"
+                      [disabled]="deletingId() === item.id"
+                      title="Delete">
+                      @if (deletingId() === item.id) { ⏳ } @else { 🗑 }
+                    </button>
+                  </div>
+                </div>
+              }
+              @if (expenses().length > 5) {
+                <div class="view-all-link">
+                  <a routerLink="/transactions" [queryParams]="{type: 'expense'}">View all expenses →</a>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
